@@ -1,0 +1,30 @@
+# Ignore the virtual environment folder
+venv_sc/
+
+# Python-related files
+*.pyc
+__pycache__/
+*.pyo
+*.pyd
+
+# Django-related files
+db.sqlite3
+*.log
+
+# Ignore environment files (if any)
+.env
+
+# Ignore static files (optional, if generated during deployment)
+staticfiles/
+static/
+
+# Ignore media files (optional, if you're using a media folder for user uploads)
+media/
+
+# Ignore IDE/editor-specific files
+.vscode/
+.idea/
+
+# Ignore system files
+.DS_Store
+Thumbs.db
