@@ -121,6 +121,7 @@ import re
 import os
 
 openai.api_key = os.getenv('OPENAI_API_KEY')
+print(f"OPENAI_API_KEY from .env: {os.getenv('OPENAI_API_KEY')}")
 
 def resume_form(request):
     if request.method == 'POST':
