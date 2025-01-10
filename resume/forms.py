@@ -19,6 +19,8 @@
 from django import forms
 
 class ResumeForm(forms.Form):
+    job_position = forms.CharField(max_length=100, required=False, label="Job Position")
+    job_description = forms.CharField(widget=forms.Textarea, required=False, label="Job Description")
     full_name = forms.CharField(max_length=100, label='Full Name', required=False)
     email = forms.EmailField(label='Email Address', required=False)
     phone_number = forms.CharField(max_length=20, required=False, label='Phone Number')

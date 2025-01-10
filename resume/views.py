@@ -1,64 +1,100 @@
 # import openai
+# import PyPDF2  # Add this for PDF processing
 # from django.shortcuts import render
 # from .forms import ResumeForm
 # import re
+# import os
 
-# # Set your OpenAI API key
+# openai.api_key = os.getenv('OPENAI_API_KEY')
+# print(f"OPENAI_API_KEY from .env: {os.getenv('OPENAI_API_KEY')}")
 
 # def resume_form(request):
 #     if request.method == 'POST':
-#         form = ResumeForm(request.POST)
+#         form = ResumeForm(request.POST, request.FILES)
 
 #         if form.is_valid():
-#             # Extract data from the form
-#             resume_data = {
-#                 "full_name": form.cleaned_data['full_name'],
-#                 "email": form.cleaned_data['email'],
-#                 "phone_number": form.cleaned_data['phone_number'],
-#                 "linkedin": form.cleaned_data['linkedin'],
-#                 "professional_summary": form.cleaned_data['professional_summary'],
-#                 "skills": form.cleaned_data['skills'],
-#                 "experience": form.cleaned_data['experience'],
-#                 "education": form.cleaned_data['education'],
-#                 "certifications": form.cleaned_data['certifications'],
-#                 "projects": form.cleaned_data['projects'],
-#                 "awards": form.cleaned_data['awards'],
-#                 "languages": form.cleaned_data['languages'],
-#                 "portfolio_url": form.cleaned_data['portfolio_url'],
-#                 "availability": form.cleaned_data['availability']
-#             }
+#             # Check if a PDF file was uploaded
+#             if request.FILES.get("resume_pdf"):
+#                 uploaded_file = request.FILES["resume_pdf"]
 
-#             # Format the input as a conversation
-#             messages = [
-#                 {"role": "system", "content": "You are a professional career advisor."},
-#                 {"role": "user", "content": f"Provide suggestions to improve the following resume:\n\n{resume_data}"}
-#             ]
+#                 # Extract text from the uploaded PDF
+#                 try:
+#                     pdf_reader = PyPDF2.PdfReader(uploaded_file)
+#                     extracted_text = ""
+#                     for page in pdf_reader.pages:
+#                         extracted_text += page.extract_text()
 
-#             try:
-#                 # Call the OpenAI ChatCompletion API
-#                 response = openai.ChatCompletion.create(
-#                     model="gpt-3.5-turbo",
-#                     messages=messages,
-#                     max_tokens=1000,
-#                     temperature=0.7
-#                 )
+#                     # Debugging output
+#                     print("Extracted Text from PDF:", extracted_text[:500])  # Display first 500 characters
 
-#                 # Extract the assistant's reply
-#                 suggestions = response['choices'][0]['message']['content'].strip()
-#                 # Debugging output
-#                 print("Raw Suggestions from ChatGPT:", suggestions)
-                
+#                     # Format the input as a conversation
+#                     messages = [
+#                         {"role": "system", "content": "You are a professional career advisor."},
+#                         {"role": "user", "content": f"Provide suggestions to improve the following resume:\n\n{extracted_text}"}
+#                     ]
 
-#                 # Parse the suggestions into HTML bullets
-#                 parsed_suggestions = format_suggestions_as_bullets(suggestions) # Debugging in the console
-#                 # Debugging parsed content
-#                 print("Parsed Suggestions:", parsed_suggestions)
-                
+#                     # Call the OpenAI ChatCompletion API
+#                     response = openai.ChatCompletion.create(
+#                         model="gpt-3.5-turbo",
+#                         messages=messages,
+#                         max_tokens=1000,
+#                         temperature=0.7
+#                     )
 
-#                 # Render the response in the thank_you page
-#                 return render(request, 'resume/thank_you.html', {'suggestions': parsed_suggestions})
-#             except Exception as e:
-#                 return render(request, 'resume/thank_you.html', {'error': str(e)})
+#                     # Extract the assistant's reply
+#                     suggestions = response['choices'][0]['message']['content'].strip()
+#                     # Parse the suggestions into HTML bullets
+#                     parsed_suggestions = format_suggestions_as_bullets(suggestions)
+
+#                     # Render the response in the thank_you page
+#                     return render(request, 'resume/thank_you.html', {'suggestions': parsed_suggestions})
+
+#                 except Exception as e:
+#                     error_message = "There was an error processing your PDF file. Please try again."
+#                     return render(request, 'resume/resume_form.html', {'form': form, 'error_message': error_message})
+#             else:
+#                 # If the form data is submitted instead of a PDF
+#                 resume_data = {
+#                     "full_name": form.cleaned_data['full_name'],
+#                     "email": form.cleaned_data['email'],
+#                     "phone_number": form.cleaned_data['phone_number'],
+#                     "linkedin": form.cleaned_data['linkedin'],
+#                     "professional_summary": form.cleaned_data['professional_summary'],
+#                     "skills": form.cleaned_data['skills'],
+#                     "experience": form.cleaned_data['experience'],
+#                     "education": form.cleaned_data['education'],
+#                     "certifications": form.cleaned_data['certifications'],
+#                     "projects": form.cleaned_data['projects'],
+#                     "awards": form.cleaned_data['awards'],
+#                     "languages": form.cleaned_data['languages'],
+#                     "portfolio_url": form.cleaned_data['portfolio_url'],
+#                     "availability": form.cleaned_data['availability']
+#                 }
+
+#                 # Format the input as a conversation
+#                 messages = [
+#                     {"role": "system", "content": "You are a professional career advisor."},
+#                     {"role": "user", "content": f"Provide suggestions to improve the following resume:\n\n{resume_data}"}
+#                 ]
+
+#                 try:
+#                     # Call the OpenAI ChatCompletion API
+#                     response = openai.ChatCompletion.create(
+#                         model="gpt-3.5-turbo",
+#                         messages=messages,
+#                         max_tokens=1000,
+#                         temperature=0.7
+#                     )
+
+#                     # Extract the assistant's reply
+#                     suggestions = response['choices'][0]['message']['content'].strip()
+#                     # Parse the suggestions into HTML bullets
+#                     parsed_suggestions = format_suggestions_as_bullets(suggestions)
+
+#                     # Render the response in the thank_you page
+#                     return render(request, 'resume/thank_you.html', {'suggestions': parsed_suggestions})
+#                 except Exception as e:
+#                     return render(request, 'resume/thank_you.html', {'error': str(e)})
 
 #     else:
 #         form = ResumeForm()
@@ -71,8 +107,6 @@
 #     Convert the ChatGPT suggestions into structured HTML bullets grouped under categories.
 #     Handles long inputs and edge cases gracefully.
 #     """
-#     import re
-
 #     # Sanity check for input
 #     if not suggestions or not isinstance(suggestions, str):
 #         return "<p>No suggestions provided.</p>"
@@ -128,6 +162,9 @@ def resume_form(request):
         form = ResumeForm(request.POST, request.FILES)
 
         if form.is_valid():
+            job_position = form.cleaned_data.get('job_position', '')
+            job_description = form.cleaned_data.get('job_description', '')
+
             # Check if a PDF file was uploaded
             if request.FILES.get("resume_pdf"):
                 uploaded_file = request.FILES["resume_pdf"]
@@ -145,7 +182,7 @@ def resume_form(request):
                     # Format the input as a conversation
                     messages = [
                         {"role": "system", "content": "You are a professional career advisor."},
-                        {"role": "user", "content": f"Provide suggestions to improve the following resume:\n\n{extracted_text}"}
+                        {"role": "user", "content": f"Provide suggestions to improve the following resume for the position of '{job_position}' based on the job description:\n\n{job_description}\n\nResume:\n\n{extracted_text}"}
                     ]
 
                     # Call the OpenAI ChatCompletion API
@@ -189,7 +226,7 @@ def resume_form(request):
                 # Format the input as a conversation
                 messages = [
                     {"role": "system", "content": "You are a professional career advisor."},
-                    {"role": "user", "content": f"Provide suggestions to improve the following resume:\n\n{resume_data}"}
+                    {"role": "user", "content": f"Provide suggestions to improve the following resume for the position of '{job_position}' based on the job description:\n\n{job_description}\n\nResume:\n\n{resume_data}"}
                 ]
 
                 try:
