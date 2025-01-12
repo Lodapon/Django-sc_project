@@ -265,14 +265,15 @@ def resume_form(request):
             if request.FILES.get("resume_pdf"):
                 return handle_pdf_submission(request, request.FILES["resume_pdf"], job_position, job_description, form)
             else:
-                return handle_form_submission(form.cleaned_data, job_position, job_description)
+                return handle_form_submission(request, form.cleaned_data, job_position, job_description)
 
     else:
         form = ResumeForm()
 
     return render(request, 'resume/resume_form.html', {'form': form})
 
-def handle_form_submission(form_data, job_position, job_description):
+
+def handle_form_submission(request, form_data, job_position, job_description):
     """Process a manually filled form submission."""
     try:
         # Extract form data into a dictionary
