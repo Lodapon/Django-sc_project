@@ -263,7 +263,6 @@ def resume_form(request):
             job_description = form.cleaned_data.get('job_description', 'Not provided')
 
             if request.FILES.get("resume_pdf"):
-                # Pass the request to handle_pdf_submission
                 return handle_pdf_submission(request, request.FILES["resume_pdf"], job_position, job_description, form)
             else:
                 return handle_form_submission(form.cleaned_data, job_position, job_description)
@@ -272,6 +271,47 @@ def resume_form(request):
         form = ResumeForm()
 
     return render(request, 'resume/resume_form.html', {'form': form})
+
+def handle_form_submission(form_data, job_position, job_description):
+    """Process a manually filled form submission."""
+    try:
+        # Extract form data into a dictionary
+        resume_data = {
+            "full_name": form_data['full_name'],
+            "email": form_data['email'],
+            "phone_number": form_data['phone_number'],
+            "linkedin": form_data['linkedin'],
+            "professional_summary": form_data['professional_summary'],
+            "skills": form_data['skills'],
+            "experience": form_data['experience'],
+            "education": form_data['education'],
+            "certifications": form_data['certifications'],
+            "projects": form_data['projects'],
+            "awards": form_data['awards'],
+            "languages": form_data['languages'],
+            "portfolio_url": form_data['portfolio_url'],
+            "availability": form_data['availability'],
+        }
+
+        # Convert the dictionary to a formatted string for ChatGPT
+        resume_text = "\n".join(f"{key}: {value}" for key, value in resume_data.items() if value)
+
+        # Generate suggestions using ChatGPT
+        suggestions = get_chatgpt_suggestions(resume_text, job_position, job_description)
+        parsed_suggestions = format_suggestions_as_bullets(suggestions)
+
+        # Render the response
+        return render(request, 'resume/thank_you.html', {
+            'suggestions': parsed_suggestions,
+            'job_position': job_position,
+            'job_description': job_description,
+        })
+
+    except Exception as e:
+        # Handle errors and return to the form
+        error_message = f"Error processing form data: {str(e)}"
+        return render(request, 'resume/resume_form.html', {'form': ResumeForm(initial=form_data), 'error_message': error_message})
+
 
 
 def handle_pdf_submission(request, uploaded_file, job_position, job_description, form):
