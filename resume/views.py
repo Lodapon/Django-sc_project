@@ -263,7 +263,8 @@ def resume_form(request):
             job_description = form.cleaned_data.get('job_description', 'Not provided')
 
             if request.FILES.get("resume_pdf"):
-                return handle_pdf_submission(request.FILES["resume_pdf"], job_position, job_description, form)
+                # Pass the request to handle_pdf_submission
+                return handle_pdf_submission(request, request.FILES["resume_pdf"], job_position, job_description, form)
             else:
                 return handle_form_submission(form.cleaned_data, job_position, job_description)
 
@@ -273,7 +274,7 @@ def resume_form(request):
     return render(request, 'resume/resume_form.html', {'form': form})
 
 
-def handle_pdf_submission(uploaded_file, job_position, job_description, form):
+def handle_pdf_submission(request, uploaded_file, job_position, job_description, form):
     """Process a submitted PDF resume."""
     try:
         # Extract text from the uploaded PDF
@@ -298,26 +299,6 @@ def handle_pdf_submission(uploaded_file, job_position, job_description, form):
         error_message = f"Error processing the PDF: {str(e)}"
         return render(request, 'resume/resume_form.html', {'form': form, 'error_message': error_message})
 
-
-def handle_form_submission(resume_data, job_position, job_description):
-    """Process a manually filled form resume."""
-    try:
-        # Convert resume data to a string
-        resume_text = "\n".join(f"{key}: {value}" for key, value in resume_data.items())
-
-        # Generate suggestions
-        suggestions = get_chatgpt_suggestions(resume_text, job_position, job_description)
-        parsed_suggestions = format_suggestions_as_bullets(suggestions)
-
-        return render(request, 'resume/thank_you.html', {
-            'suggestions': parsed_suggestions,
-            'job_position': job_position,
-            'job_description': job_description,
-        })
-
-    except Exception as e:
-        error_message = f"Error processing the form data: {str(e)}"
-        return render(request, 'resume/resume_form.html', {'form': ResumeForm(), 'error_message': error_message})
 
 
 def get_chatgpt_suggestions(resume_text, job_position, job_description):
